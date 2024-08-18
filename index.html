@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Reproductor de Playlist Estilo Spotify</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #121212;
+        color: #fff;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      header {
+        background-color: #1db954;
+        color: #fff;
+        padding: 15px;
+        width: 100%;
+        text-align: center;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+      header h1 {
+        margin: 0;
+        font-size: 1.5em;
+      }
+      .player-container {
+        width: 90%;
+        max-width: 800px;
+        margin: 20px auto;
+        background-color: #282828;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      }
+      .playlist {
+        margin-bottom: 20px;
+      }
+      .playlist ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+      }
+      .playlist li {
+        cursor: pointer;
+        padding: 10px;
+        border-radius: 4px;
+        transition: background-color 0.3s;
+        margin-bottom: 5px;
+        display: flex;
+        align-items: center;
+      }
+      .playlist li:hover {
+        background-color: #404040;
+      }
+      .playlist li.active {
+        background-color: #1db954;
+        color: #fff;
+      }
+      .playlist img {
+        width: 50px;
+        height: 50px;
+        border-radius: 4px;
+        margin-right: 10px;
+      }
+      .track-info {
+        margin-bottom: 20px;
+      }
+      .track-info h2 {
+        margin: 0;
+        font-size: 1.2em;
+      }
+      .track-info p {
+        margin: 5px 0;
+        color: #b3b3b3;
+      }
+      .controls {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .controls button {
+        background: none;
+        border: none;
+        color: #1db954;
+        font-size: 1.5em;
+        cursor: pointer;
+        padding: 10px;
+        transition: color 0.3s;
+      }
+      .controls button:hover {
+        color: #1ed760;
+      }
+      .volume-control {
+        display: flex;
+        align-items: center;
+      }
+      .volume-control input[type="range"] {
+        width: 100px;
+        margin-left: 10px;
+      }
+      .playback-progress {
+        margin: 10px 0;
+      }
+      .playback-progress input[type="range"] {
+        width: 100%;
+      }
+      @media (max-width: 768px) {
+        .player-container {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>MotiPlayerMusic</h1>
+    </header>
+
+    <div class="player-container">
+      <div class="playlist">
+        <ul id="playlist">
+          <!-- Lista de pistas se llenará aquí -->
+        </ul>
+      </div>
+      <div class="track-info">
+        <img
+          src="https://via.placeholder.com/100"
+          alt="Portada del álbum"
+          id="albumArt"
+        />
+        <h2 id="trackTitle">Título de la Canción</h2>
+        <p id="artistName">Artista</p>
+      </div>
+      <div class="controls">
+        <button id="prevBtn">&#9664;</button>
+        <button id="playPauseBtn">&#9658;</button>
+        <button id="nextBtn">&#9654;</button>
+      </div>
+      <div class="playback-progress">
+        <input type="range" id="progressBar" value="0" min="0" max="100" />
+      </div>
+      <div class="volume-control">
+        <span>&#128266;</span>
+        <input type="range" id="volumeControl" value="100" min="0" max="100" />
+      </div>
+      <audio id="audioPlayer" src=""></audio>
+    </div>
+
+    <script>
+      const audioPlayer = document.getElementById("audioPlayer");
+      const playPauseBtn = document.getElementById("playPauseBtn");
+      const progressBar = document.getElementById("progressBar");
+      const volumeControl = document.getElementById("volumeControl");
+      const playlist = document.getElementById("playlist");
+      const trackTitle = document.getElementById("trackTitle");
+      const artistName = document.getElementById("artistName");
+      const albumArt = document.getElementById("albumArt");
+      const prevBtn = document.getElementById("prevBtn");
+      const nextBtn = document.getElementById("nextBtn");
+
+      const tracks = [
+        {
+          title: "Canción 1",
+          artist: "Artista 1",
+          src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+          thumbnail: "https://via.placeholder.com/50?text=1",
+        },
+        {
+          title: "Canción 2",
+          artist: "Artista 2",
+          src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+          thumbnail: "https://via.placeholder.com/50?text=2",
+        },
+        {
+          title: "Canción 3",
+          artist: "Artista 3",
+          src: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+          thumbnail: "https://via.placeholder.com/50?text=3",
+        },
+      ];
+
+      let currentTrackIndex = 0;
+
+      function loadTrack(index) {
+        const track = tracks[index];
+        audioPlayer.src = track.src;
+        trackTitle.textContent = track.title;
+        artistName.textContent = track.artist;
+        albumArt.src = track.thumbnail;
+        playlist.querySelectorAll("li").forEach((item, i) => {
+          item.classList.toggle("active", i === index);
+        });
+      }
+
+      function playPauseTrack() {
+        if (audioPlayer.paused) {
+          audioPlayer.play();
+          playPauseBtn.innerHTML = "&#10074;&#10074;";
+        } else {
+          audioPlayer.pause();
+          playPauseBtn.innerHTML = "&#9658;";
+        }
+      }
+
+      function prevTrack() {
+        currentTrackIndex =
+          currentTrackIndex > 0 ? currentTrackIndex - 1 : tracks.length - 1;
+        loadTrack(currentTrackIndex);
+        audioPlayer.play();
+      }
+
+      function nextTrack() {
+        currentTrackIndex =
+          currentTrackIndex < tracks.length - 1 ? currentTrackIndex + 1 : 0;
+        loadTrack(currentTrackIndex);
+        audioPlayer.play();
+      }
+
+      function updateProgress() {
+        const value = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+        progressBar.value = value;
+      }
+
+      function setProgress() {
+        const value = (progressBar.value * audioPlayer.duration) / 100;
+        audioPlayer.currentTime = value;
+      }
+
+      function setVolume() {
+        audioPlayer.volume = volumeControl.value / 100;
+      }
+
+      playPauseBtn.addEventListener("click", playPauseTrack);
+      prevBtn.addEventListener("click", prevTrack);
+      nextBtn.addEventListener("click", nextTrack);
+      audioPlayer.addEventListener("timeupdate", updateProgress);
+      progressBar.addEventListener("input", setProgress);
+      volumeControl.addEventListener("input", setVolume);
+
+      tracks.forEach((track, index) => {
+        const li = document.createElement("li");
+        li.innerHTML = `<img src="${track.thumbnail}" alt="${track.title}"> ${track.title}`;
+        li.addEventListener("click", () => {
+          currentTrackIndex = index;
+          loadTrack(currentTrackIndex);
+          audioPlayer.play();
+        });
+        playlist.appendChild(li);
+      });
+
+      // Load the first track by default
+      loadTrack(currentTrackIndex);
+    </script>
+  </body>
+</html>
